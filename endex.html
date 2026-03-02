@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Duelo de Ahorro: Neo-Versus</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@500;700&display=swap');
+
+        :root {
+            --neon-blue: #00f2ff;
+            --neon-pink: #ff00ff;
+            --dark-bg: #050505;
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            color: #fff;
+            font-family: 'Rajdhani', sans-serif;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        .orbitron { font-family: 'Orbitron', sans-serif; }
+
+        .neon-border-blue {
+            box-shadow: 0 0 15px var(--neon-blue), inset 0 0 5px var(--neon-blue);
+            border: 2px solid var(--neon-blue);
+        }
+
+        .neon-border-pink {
+            box-shadow: 0 0 15px var(--neon-pink), inset 0 0 5px var(--neon-pink);
+            border: 2px solid var(--neon-pink);
+        }
+
+        .glitch-text {
+            text-shadow: 2px 0 var(--neon-pink), -2px 0 var(--neon-blue);
+        }
+
+        .progress-container {
+            background: #111;
+            height: 12px;
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .bar-blue { background: linear-gradient(90deg, #0088ff, var(--neon-blue)); }
+        .bar-pink { background: linear-gradient(90deg, #ff0088, var(--neon-pink)); }
+
+        .vs-sphere {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: radial-gradient(circle, #222 0%, #000 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 10;
+            border: 4px solid #333;
+            transition: all 0.5s ease;
+        }
+
+        input {
+            background: #111 !important;
+            border: 1px solid #333 !important;
+            color: white !important;
+            text-align: center;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: white !important;
+        }
+
+        .history-item {
+            animation: slideIn 0.3s ease-out forwards;
+            background: rgba(255,255,255,0.03);
+            padding: 4px 8px;
+            border-radius: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .delete-btn {
+            color: #666;
+            cursor: pointer;
+            font-weight: bold;
+            padding: 0 5px;
+            transition: color 0.2s;
+        }
+
+        .delete-btn:hover {
+            color: #ff4444;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(-10px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center p-4">
+
+    <div class="z-10 w-full max-w-6xl py-8">
+        <div class="text-center mb-10">
+            <h1 class="orbitron text-5xl md:text-7xl font-black italic glitch-text tracking-tighter uppercase">
+                Ahorro <span class="text-white">Core</span>
+            </h1>
+            <p class="text-gray-500 tracking-[0.5em] uppercase text-xs mt-2 font-bold">Protocolo de Pareja v3.0</p>
+        </div>
+
+        <div class="flex flex-col lg:flex-row items-stretch justify-between gap-6">
+            
+            <!-- Jugador Azul -->
+            <div class="w-full lg:w-5/12 flex flex-col gap-4">
+                <div class="neon-border-blue bg-black/80 p-6 rounded-tr-[40px] rounded-bl-[40px]">
+                    <div class="flex justify-between items-end mb-4">
+                        <div>
+                            <p class="text-blue-400 text-[10px] font-bold tracking-widest uppercase">Operativo</p>
+                            <h2 class="orbitron text-2xl font-bold text-white uppercase tracking-tight">Team Azul</h2>
+                        </div>
+                        <span id="perc-blue" class="text-3xl font-black text-blue-400">0%</span>
+                    </div>
+
+                    <div class="space-y-3">
+                        <div class="progress-container">
+                            <div id="bar-blue" class="h-full bar-blue transition-all duration-700" style="width: 0%"></div>
+                        </div>
+                        <div class="flex justify-between text-sm orbitron font-bold">
+                            <span id="curr-blue" class="text-blue-200">$0.00</span>
+                            <span class="text-gray-600">META: <span id="goal-display-blue" class="text-blue-400">$0</span></span>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 flex gap-2">
+                        <input type="number" id="input-blue" placeholder="MONTO" class="w-full py-2 rounded font-bold text-sm">
+                        <button onclick="add('blue')" class="bg-blue-600 hover:bg-blue-400 text-black font-black px-4 py-2 rounded transition-all active:scale-95 uppercase text-xs">Inyectar</button>
+                    </div>
+                </div>
+
+                <div class="bg-black/40 p-4 rounded-xl border border-gray-900 flex-grow">
+                    <p class="text-blue-900 font-bold uppercase text-[10px] mb-3 tracking-widest">Logs de Transacción</p>
+                    <div id="logs-blue" class="space-y-2 text-[11px] max-h-48 overflow-y-auto pr-2"></div>
+                </div>
+            </div>
+
+            <!-- Centro VS -->
+            <div class="flex flex-col items-center justify-center gap-6 py-4">
+                <div class="vs-sphere shadow-[0_0_30px_rgba(255,255,255,0.05)]">
+                    <div class="orbitron text-3xl font-black italic text-white" id="dominance-icon">VS</div>
+                </div>
+                <div id="dominance-text" class="text-center font-bold text-gray-500 uppercase tracking-widest text-[10px] max-w-[120px]">
+                    Sincronizando...
+                </div>
+                <div class="flex flex-col items-center gap-2">
+                    <label class="text-[9px] text-gray-700 uppercase font-black">Meta Global</label>
+                    <input type="number" id="global-goal" placeholder="1000" class="w-20 py-1 text-[11px] rounded border-gray-800" onchange="setGlobalGoal(this.value)">
+                </div>
+            </div>
+
+            <!-- Jugador Rosado -->
+            <div class="w-full lg:w-5/12 flex flex-col gap-4">
+                <div class="neon-border-pink bg-black/80 p-6 rounded-tl-[40px] rounded-br-[40px]">
+                    <div class="flex justify-between items-end mb-4">
+                        <span id="perc-pink" class="text-3xl font-black text-pink-400">0%</span>
+                        <div class="text-right">
+                            <p class="text-pink-400 text-[10px] font-bold tracking-widest uppercase">Operativo</p>
+                            <h2 class="orbitron text-2xl font-bold text-white uppercase tracking-tight">Team Pink</h2>
+                        </div>
+                    </div>
+
+                    <div class="space-y-3">
+                        <div class="progress-container">
+                            <div id="bar-pink" class="h-full bar-pink transition-all duration-700" style="width: 0%"></div>
+                        </div>
+                        <div class="flex justify-between text-sm orbitron font-bold">
+                            <span class="text-gray-600">META: <span id="goal-display-pink" class="text-pink-400">$0</span></span>
+                            <span id="curr-pink" class="text-pink-200">$0.00</span>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 flex gap-2">
+                        <button onclick="add('pink')" class="bg-pink-600 hover:bg-pink-400 text-black font-black px-4 py-2 rounded transition-all active:scale-95 uppercase text-xs">Inyectar</button>
+                        <input type="number" id="input-pink" placeholder="MONTO" class="w-full py-2 rounded font-bold text-sm">
+                    </div>
+                </div>
+
+                <div class="bg-black/40 p-4 rounded-xl border border-gray-900 flex-grow text-right">
+                    <p class="text-pink-900 font-bold uppercase text-[10px] mb-3 tracking-widest">Logs de Transacción</p>
+                    <div id="logs-pink" class="space-y-2 text-[11px] max-h-48 overflow-y-auto pr-2"></div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="mt-16 flex justify-center opacity-20 hover:opacity-100 transition-opacity">
+            <button onclick="hardReset()" class="text-[9px] uppercase tracking-[0.4em] border border-gray-900 px-6 py-2 hover:bg-red-950 hover:text-white transition rounded-full">Wipe System Memory</button>
+        </div>
+    </div>
+
+    <script>
+        let data = {
+            blue: { current: 0, goal: 1000, logs: [] },
+            pink: { current: 0, goal: 1000, logs: [] }
+        };
+
+        const STORAGE_KEY = 'NEO_SAVINGS_V3_DATA';
+
+        window.onload = () => {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) data = JSON.parse(saved);
+            updateUI('blue');
+            updateUI('pink');
+            document.getElementById('global-goal').value = data.blue.goal;
+            calculateDominance();
+        };
+
+        function setGlobalGoal(val) {
+            const goal = parseFloat(val) || 1000;
+            data.blue.goal = goal;
+            data.pink.goal = goal;
+            updateUI('blue');
+            updateUI('pink');
+            calculateDominance();
+            save();
+        }
+
+        function add(side) {
+            const input = document.getElementById(`input-${side}`);
+            const val = parseFloat(input.value);
+            
+            if (val > 0) {
+                const logId = Date.now();
+                data[side].current += val;
+                data[side].logs.unshift({
+                    id: logId,
+                    amt: val,
+                    time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+                });
+                
+                input.value = '';
+                updateUI(side);
+                calculateDominance();
+                save();
+            }
+        }
+
+        function removeEntry(side, id) {
+            const index = data[side].logs.findIndex(log => log.id === id);
+            if (index !== -1) {
+                const amount = data[side].logs[index].amt;
+                data[side].current -= amount;
+                data[side].logs.splice(index, 1);
+                
+                updateUI(side);
+                calculateDominance();
+                save();
+            }
+        }
+
+        function updateUI(side) {
+            const player = data[side];
+            const perc = Math.min((player.current / player.goal) * 100, 100);
+            
+            document.getElementById(`perc-${side}`).innerText = Math.round(perc) + '%';
+            document.getElementById(`bar-${side}`).style.width = perc + '%';
+            document.getElementById(`curr-${side}`).innerText = '$' + player.current.toLocaleString(undefined, {minimumFractionDigits: 2});
+            document.getElementById(`goal-display-${side}`).innerText = '$' + player.goal.toLocaleString();
+
+            const logsEl = document.getElementById(`logs-${side}`);
+            if (player.logs.length === 0) {
+                logsEl.innerHTML = `<div class="text-gray-800 italic uppercase">Esperando datos...</div>`;
+            } else {
+                logsEl.innerHTML = player.logs.map(log => `
+                    <div class="history-item text-gray-500 font-mono">
+                        <span>
+                            <span class="text-gray-700">[${log.time}]</span> 
+                            <span class="text-white">+$${log.amt.toLocaleString()}</span>
+                        </span>
+                        <span class="delete-btn" onclick="removeEntry('${side}', ${log.id})">×</span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function calculateDominance() {
+            const b = data.blue.goal > 0 ? (data.blue.current / data.blue.goal) : 0;
+            const p = data.pink.goal > 0 ? (data.pink.current / data.pink.goal) : 0;
+            const sphere = document.querySelector('.vs-sphere');
+            const domText = document.getElementById('dominance-text');
+            const domIcon = document.getElementById('dominance-icon');
+
+            if (b === 0 && p === 0) {
+                domText.innerText = "ESPERANDO INYECCIÓN";
+                sphere.style.boxShadow = `0 0 10px rgba(255,255,255,0.05)`;
+                domIcon.innerText = "VS";
+                return;
+            }
+
+            if (b > p) {
+                sphere.style.boxShadow = `0 0 40px var(--neon-blue)`;
+                domIcon.className = "orbitron text-3xl font-black italic text-blue-400";
+                domIcon.innerText = "AZL";
+                domText.innerText = "DOMINIO AZUL ACTIVADO";
+            } else if (p > b) {
+                sphere.style.boxShadow = `0 0 40px var(--neon-pink)`;
+                domIcon.className = "orbitron text-3xl font-black italic text-pink-400";
+                domIcon.innerText = "PNK";
+                domText.innerText = "DOMINIO ROSADO ACTIVADO";
+            } else {
+                sphere.style.boxShadow = `0 0 30px #fff`;
+                domIcon.className = "orbitron text-3xl font-black italic text-white";
+                domIcon.innerText = "EQ";
+                domText.innerText = "EQUILIBRIO DE PODER";
+            }
+        }
+
+        function save() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        }
+
+        function hardReset() {
+            if (confirm("SISTEMA: ¿Confirmar purga total de datos?")) {
+                localStorage.removeItem(STORAGE_KEY);
+                location.reload();
+            }
+        }
+    </script>
+</body>
+</html>
+
