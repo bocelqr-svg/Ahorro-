@@ -3,208 +3,203 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Transcriptor de Nómina</title>
+    <title>IA Multi-Vía - Consultor Global</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        .editable-card {
-            background: white;
-            border-radius: 12px;
-            padding: 12px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            border: 1px solid #e2e8f0;
-            margin-bottom: 8px;
-            transition: all 0.2s;
-        }
-        .editable-card:focus-within {
-            border-color: #3b82f6;
-            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.1);
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .glass { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(10px); }
+        .chat-container::-webkit-scrollbar { width: 6px; }
+        .chat-container::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen text-gray-900 pb-24">
-    <div class="max-w-xl mx-auto p-4">
-        <!-- Header -->
-        <header class="py-8 text-center">
-            <h1 class="text-2xl font-black text-slate-800 tracking-tight">MI NÓMINA</h1>
-            <p class="text-gray-500 text-sm">Sube tu volante para transcribir y calcular</p>
-        </header>
+<body class="bg-slate-50 min-h-screen flex flex-col">
 
-        <!-- Sección de Carga -->
-        <div id="upload-section" class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 mb-6">
-            <div id="drop-zone" class="border-2 border-dashed border-blue-200 rounded-2xl p-10 text-center bg-blue-50/50 cursor-pointer hover:bg-blue-50 transition-all">
-                <input type="file" id="file-input" class="hidden" accept="image/*">
-                <div id="upload-prompt">
-                    <div class="bg-blue-600 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-200">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                    </div>
-                    <p class="text-blue-700 font-bold">Tomar foto o subir volante</p>
-                    <p class="text-gray-400 text-xs mt-1">Se extraerán todos los conceptos automáticamente</p>
+    <!-- Header -->
+    <header class="glass sticky top-0 z-50 border-b border-slate-200 p-4 flex justify-between items-center shadow-sm">
+        <div class="flex items-center gap-3">
+            <div class="bg-gradient-to-tr from-blue-600 to-indigo-600 p-2 rounded-xl shadow-md">
+                <i class="fas fa-microchip text-white text-xl"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-slate-800 leading-tight">IA Multi-Vía</h1>
+                <p class="text-[10px] text-indigo-600 font-semibold uppercase tracking-wider">Conexión Google & IA</p>
+            </div>
+        </div>
+        <button id="clearChat" class="text-slate-400 hover:text-red-500 transition-colors p-2">
+            <i class="fas fa-rotate-right"></i>
+        </button>
+    </header>
+
+    <!-- Chat Area -->
+    <main id="chatDisplay" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 max-w-4xl mx-auto w-full chat-container">
+        <!-- Mensaje Inicial -->
+        <div class="flex justify-start">
+            <div class="flex gap-3 max-w-[85%]">
+                <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center flex-shrink-0 text-slate-500">
+                    <i class="fas fa-robot"></i>
                 </div>
-                <img id="img-preview" class="hidden w-full max-h-60 object-contain rounded-xl">
-            </div>
-
-            <button id="btn-analyze" class="hidden w-full mt-6 bg-slate-900 text-white py-4 rounded-2xl font-bold shadow-xl active:scale-95 transition-all">
-                TRANSCRIBIR IMAGEN
-            </button>
-        </div>
-
-        <!-- Estado de Carga -->
-        <div id="loading" class="hidden text-center py-12">
-            <div class="inline-block w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
-            <p class="font-bold text-slate-700">Leyendo tu volante...</p>
-            <p class="text-gray-400 text-xs">Esto puede tardar unos segundos</p>
-        </div>
-
-        <!-- Editor de Transcripción -->
-        <div id="editor-section" class="hidden">
-            <div class="flex justify-between items-center mb-4 px-2">
-                <h2 class="font-black text-slate-800">CONCEPTOS DETECTADOS</h2>
-                <span class="text-[10px] bg-slate-200 px-2 py-1 rounded-full font-bold text-slate-600 uppercase">Editable</span>
-            </div>
-            
-            <div id="list-container">
-                <!-- Filas editables aquí -->
-            </div>
-
-            <!-- Panel de Resultados Fijos en la parte inferior -->
-            <div class="fixed bottom-0 left-0 right-0 p-4 bg-white/80 backdrop-blur-md border-t border-gray-200 z-50">
-                <div class="max-w-xl mx-auto bg-slate-900 rounded-2xl p-5 text-white shadow-2xl">
-                    <div class="flex justify-between items-center">
-                        <div>
-                            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Total Neto a Cobrar</p>
-                            <p id="total-neto" class="text-3xl font-black text-green-400">RD$ 0.00</p>
-                        </div>
-                        <button onclick="window.location.reload()" class="p-3 bg-slate-800 rounded-xl">
-                            <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                        </button>
-                    </div>
+                <div class="bg-white border border-slate-200 p-4 rounded-2xl rounded-tl-none shadow-sm text-slate-700 text-sm leading-relaxed">
+                    ¡Hola! Soy tu asistente de investigación. Mis respuestas se basan en el modelo <b>Gemini 2.5</b> y consultas en tiempo real a través de <b>Google</b>. ¿Qué "vía" quieres explorar hoy?
                 </div>
             </div>
         </div>
+    </main>
+
+    <!-- Error Toast -->
+    <div id="errorMessage" class="hidden fixed bottom-24 left-1/2 -translate-x-1/2 bg-red-600 text-white px-6 py-3 rounded-full shadow-2xl z-50 flex items-center gap-2 text-sm">
+        <i class="fas fa-circle-exclamation"></i>
+        <span id="errorText">Error de conexión</span>
     </div>
 
-    <script type="module">
-        const apiKey = "";
-        const fileInput = document.getElementById('file-input');
-        const dropZone = document.getElementById('drop-zone');
-        const imgPreview = document.getElementById('img-preview');
-        const btnAnalyze = document.getElementById('btn-analyze');
-        
-        let items = [];
+    <!-- Input Footer -->
+    <footer class="p-4 bg-white border-t border-slate-200 glass">
+        <form id="chatForm" class="max-w-4xl mx-auto flex items-center gap-2">
+            <div class="relative flex-1">
+                <input 
+                    type="text" 
+                    id="userInput" 
+                    placeholder="Pregunta lo que quieras..." 
+                    class="w-full pl-4 pr-12 py-4 bg-slate-100 border-none rounded-2xl focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all outline-none text-slate-800"
+                    autocomplete="off"
+                >
+                <div id="loadingIcon" class="hidden absolute right-4 top-1/2 -translate-y-1/2">
+                    <i class="fas fa-circle-notch fa-spin text-indigo-600"></i>
+                </div>
+            </div>
+            <button 
+                type="submit" 
+                id="sendBtn"
+                class="bg-indigo-600 hover:bg-indigo-700 text-white w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg shadow-indigo-200 transition-all active:scale-95 disabled:opacity-50 disabled:active:scale-100"
+            >
+                <i class="fas fa-paper-plane text-xl"></i>
+            </button>
+        </form>
+        <p class="text-center text-[10px] text-slate-400 mt-3 uppercase font-medium tracking-widest">
+            Powered by Gemini 2.5 Flash & Search Grounding
+        </p>
+    </footer>
 
-        dropZone.onclick = () => fileInput.click();
+    <script>
+        const chatDisplay = document.getElementById('chatDisplay');
+        const chatForm = document.getElementById('chatForm');
+        const userInput = document.getElementById('userInput');
+        const loadingIcon = document.getElementById('loadingIcon');
+        const errorMessage = document.getElementById('errorMessage');
+        const errorText = document.getElementById('errorText');
+        const clearChatBtn = document.getElementById('clearChat');
+        const sendBtn = document.getElementById('sendBtn');
 
-        fileInput.onchange = (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (f) => {
-                    imgPreview.src = f.target.result;
-                    imgPreview.classList.remove('hidden');
-                    document.getElementById('upload-prompt').classList.add('hidden');
-                    btnAnalyze.classList.remove('hidden');
-                };
-                reader.readAsDataURL(file);
-            }
-        };
+        const apiKey = ""; // El entorno inyecta la clave automáticamente
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'ia-multivia-v1';
 
-        btnAnalyze.onclick = async () => {
-            const base64 = imgPreview.src.split(',')[1];
-            document.getElementById('upload-section').classList.add('hidden');
-            document.getElementById('loading').classList.remove('hidden');
-
-            try {
-                items = await transcribe(base64);
-                render();
-                document.getElementById('loading').classList.add('hidden');
-                document.getElementById('editor-section').classList.remove('hidden');
-            } catch (err) {
-                alert("No se pudo leer la imagen correctamente.");
-                location.reload();
-            }
-        };
-
-        async function transcribe(base64) {
-            const prompt = `Transcribe TODOS los conceptos con montos del volante de pago. 
-            Separa por 'ingreso' (pagos, horas, sueldo) y 'egreso' (descuentos, AFP, SFS, préstamos).
-            Devuelve un JSON: { items: [{ concepto: string, monto: number, tipo: "ingreso" | "egreso" }] }`;
-
-            const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: prompt }, { inlineData: { mimeType: "image/png", data: base64 } }] }],
-                    generationConfig: { 
-                        responseMimeType: "application/json",
-                        responseSchema: {
-                            type: "OBJECT",
-                            properties: {
-                                items: {
-                                    type: "ARRAY",
-                                    items: {
-                                        type: "OBJECT",
-                                        properties: {
-                                            concepto: { type: "STRING" },
-                                            monto: { type: "NUMBER" },
-                                            tipo: { type: "STRING", enum: ["ingreso", "egreso"] }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                })
-            });
-            const res = await resp.json();
-            return JSON.parse(res.candidates[0].content.parts[0].text).items;
-        }
-
-        function render() {
-            const container = document.getElementById('list-container');
-            container.innerHTML = '';
+        // Función para mostrar mensajes
+        function addMessage(role, content, sources = []) {
+            const wrapper = document.createElement('div');
+            wrapper.className = `flex ${role === 'user' ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`;
             
-            items.forEach((item, index) => {
-                const div = document.createElement('div');
-                div.className = "editable-card flex items-center justify-between gap-3";
-                div.innerHTML = `
-                    <div class="flex-1">
-                        <input type="text" value="${item.concepto}" 
-                            class="w-full bg-transparent text-sm font-bold text-slate-700 outline-none"
-                            onchange="update(${index}, 'concepto', this.value)">
-                        <div class="flex gap-2 mt-1">
-                            <button onclick="toggleType(${index})" class="text-[9px] font-black uppercase px-2 py-0.5 rounded ${item.tipo === 'ingreso' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">
-                                ${item.tipo}
-                            </button>
-                        </div>
-                    </div>
-                    <div class="w-28 relative">
-                        <span class="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs font-mono">$</span>
-                        <input type="number" value="${item.monto}" 
-                            class="w-full pl-6 pr-2 py-2 bg-gray-50 border border-transparent rounded-lg text-right font-mono text-sm font-bold focus:bg-white focus:border-blue-200 outline-none"
-                            onchange="update(${index}, 'monto', this.value)">
+            const isUser = role === 'user';
+            
+            let sourcesHtml = '';
+            if (sources.length > 0) {
+                sourcesHtml = `
+                    <div class="mt-3 flex flex-wrap gap-2 border-t border-slate-100 pt-2">
+                        <p class="text-[10px] text-slate-400 w-full flex items-center gap-1 mb-1">
+                            <i class="fas fa-globe"></i> Fuentes de Google consultadas:
+                        </p>
+                        ${sources.map(s => `
+                            <a href="${s.uri}" target="_blank" class="text-[10px] bg-slate-50 hover:bg-indigo-50 text-indigo-600 border border-slate-200 px-2 py-1 rounded transition-colors truncate max-w-[150px]">
+                                ${s.title || 'Ver enlace'}
+                            </a>
+                        `).join('')}
                     </div>
                 `;
-                container.appendChild(div);
-            });
-            calculate();
+            }
+
+            wrapper.innerHTML = `
+                <div class="flex gap-3 max-w-[85%] ${isUser ? 'flex-row-reverse' : ''}">
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${isUser ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-500'}">
+                        <i class="fas ${isUser ? 'fa-user' : 'fa-robot'} text-sm"></i>
+                    </div>
+                    <div class="${isUser ? 'bg-indigo-600 text-white rounded-tr-none' : 'bg-white border border-slate-200 text-slate-700 rounded-tl-none'} p-4 rounded-2xl shadow-sm text-sm leading-relaxed">
+                        <div class="whitespace-pre-wrap">${content}</div>
+                        ${sourcesHtml}
+                    </div>
+                </div>
+            `;
+            
+            chatDisplay.appendChild(wrapper);
+            chatDisplay.scrollTop = chatDisplay.scrollHeight;
         }
 
-        window.update = (idx, field, val) => {
-            items[idx][field] = field === 'monto' ? parseFloat(val) || 0 : val;
-            calculate();
-        };
+        async function callGemini(prompt, retries = 5, backoff = 1000) {
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: prompt }] }],
+                        systemInstruction: {
+                            parts: [{ text: "Actúa como un experto investigador. Siempre que se te pregunte algo, utiliza la herramienta de búsqueda para comparar datos y dar 'otras vías' o alternativas de solución. Sé preciso y educado." }]
+                        },
+                        tools: [{ "google_search": {} }]
+                    })
+                });
 
-        window.toggleType = (idx) => {
-            items[idx].tipo = items[idx].tipo === 'ingreso' ? 'egreso' : 'ingreso';
-            render();
-        };
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                
+                const data = await response.json();
+                const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                const groundings = data.candidates?.[0]?.groundingMetadata?.groundingAttributions?.map(a => ({
+                    uri: a.web?.uri,
+                    title: a.web?.title
+                })) || [];
 
-        function calculate() {
-            const neto = items.reduce((acc, curr) => {
-                return curr.tipo === 'ingreso' ? acc + curr.monto : acc - curr.monto;
-            }, 0);
-            document.getElementById('total-neto').innerText = `RD$ ${neto.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+                return { text, sources: groundings };
+
+            } catch (err) {
+                if (retries > 0) {
+                    await new Promise(r => setTimeout(r, backoff));
+                    return callGemini(prompt, retries - 1, backoff * 2);
+                }
+                throw err;
+            }
         }
+
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const text = userInput.value.trim();
+            if (!text) return;
+
+            userInput.value = '';
+            userInput.disabled = true;
+            sendBtn.disabled = true;
+            loadingIcon.classList.remove('hidden');
+            errorMessage.classList.add('hidden');
+
+            addMessage('user', text);
+
+            try {
+                const response = await callGemini(text);
+                addMessage('assistant', response.text, response.sources);
+            } catch (err) {
+                errorText.innerText = "No se pudo conectar con la IA. Revisa tu conexión.";
+                errorMessage.classList.remove('hidden');
+            } finally {
+                userInput.disabled = false;
+                sendBtn.disabled = false;
+                loadingIcon.classList.add('hidden');
+                userInput.focus();
+            }
+        });
+
+        clearChatBtn.addEventListener('click', () => {
+            chatDisplay.innerHTML = '';
+            addMessage('assistant', 'Chat reiniciado. ¿En qué más puedo ayudarte?');
+        });
+
+        window.onload = () => userInput.focus();
     </script>
 </body>
 </html>
