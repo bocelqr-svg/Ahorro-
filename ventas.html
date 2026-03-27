@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Ventas - R7 Colmado</title>
+
+<style>
+body{
+    font-family: Arial;
+    background:#f4f6f7;
+    margin:20px;
+}
+
+.container{
+    width:80%;
+    margin:auto;
+    background:white;
+    padding:20px;
+    border-radius:10px;
+    box-shadow:0px 0px 10px gray;
+}
+
+select, input, button{
+    padding:10px;
+    margin:10px;
+}
+
+button{
+    background:#27ae60;
+    color:white;
+    border:none;
+    cursor:pointer;
+}
+
+table{
+    width:100%;
+    margin-top:20px;
+    border-collapse:collapse;
+}
+
+th, td{
+    border:1px solid gray;
+    padding:10px;
+    text-align:center;
+}
+
+th{
+    background:#27ae60;
+    color:white;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>🧾 Ventas R7</h1>
+
+<select id="producto"></select>
+<input type="number" id="cantidad" placeholder="Cantidad">
+<button onclick="vender()">Vender</button>
+
+<h3 id="total"></h3>
+
+<table>
+<thead>
+<tr>
+<th>Producto</th>
+<th>Cantidad</th>
+<th>Total</th>
+</tr>
+</thead>
+<tbody id="tablaVentas"></tbody>
+</table>
+
+</div>
+
+<script>
+
+let productos = JSON.parse(localStorage.getItem("productos")) || [];
+let ventas = JSON.parse(localStorage.getItem("ventas")) || [];
+
+function guardar(){
+    localStorage.setItem("productos", JSON.stringify(productos));
+    localStorage.setItem("ventas", JSON.stringify(ventas));
+}
+
+function cargarProductos(){
+    let select = document.getElementById("producto");
+    select.innerHTML="";
+
+    productos.forEach((p,i)=>{
+        select.innerHTML += `<option value="${i}">
+        ${p.nombre} - RD$${p.precio} (Stock: ${p.cantidad})
+        </option>`;
+    });
+}
+
+function vender(){
+
+    let index = document.getElementById("producto").value;
+    let cantidad = parseInt(document.getElementById("cantidad").value);
+
+    if(!cantidad || cantidad <= 0){
+        alert("Cantidad inválida");
+        return;
+    }
+
+    if(productos[index].cantidad < cantidad){
+        alert("No hay suficiente producto");
+        return;
+    }
+
+    let total = cantidad * productos[index].precio;
+
+    productos[index].cantidad -= cantidad;
+
+    ventas.push({
+        nombre: productos[index].nombre,
+        cantidad: cantidad,
+        total: total
+    });
+
+    guardar();
+    mostrarVentas();
+    cargarProductos();
+
+    document.getElementById("total").innerText =
+        "Total: RD$ " + total;
+}
+
+function mostrarVentas(){
+
+    let tabla = document.getElementById("tablaVentas");
+    tabla.innerHTML="";
+
+    ventas.forEach(v=>{
+        tabla.innerHTML += `
+        <tr>
+        <td>${v.nombre}</td>
+        <td>${v.cantidad}</td>
+        <td>RD$ ${v.total}</td>
+        </tr>`;
+    });
+}
+
+cargarProductos();
+mostrarVentas();
+
+</script>
+
+</body>
+</html>
