@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Reportes - R7 Colmado</title>
+
+<style>
+body{
+    font-family: Arial;
+    background:#f4f6f7;
+    margin:20px;
+}
+
+.container{
+    width:70%;
+    margin:auto;
+    background:white;
+    padding:25px;
+    border-radius:10px;
+    box-shadow:0px 0px 10px gray;
+    text-align:center;
+}
+
+.card{
+    background:#27ae60;
+    color:white;
+    margin:15px;
+    padding:20px;
+    border-radius:10px;
+    font-size:20px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>💰 Reportes R7</h1>
+
+<div class="card" id="totalVentas"></div>
+<div class="card" id="cantidadVentas"></div>
+<div class="card" id="gananciaTotal"></div>
+
+</div>
+
+<script>
+
+let ventas = JSON.parse(localStorage.getItem("ventas")) || [];
+
+function calcularReportes(){
+
+    let total = 0;
+
+    ventas.forEach(v=>{
+        total += v.total;
+    });
+
+    document.getElementById("totalVentas").innerText =
+        "Total Vendido: RD$ " + total;
+
+    document.getElementById("cantidadVentas").innerText =
+        "Número de Ventas: " + ventas.length;
+
+    document.getElementById("gananciaTotal").innerText =
+        "Ganancia Total: RD$ " + total;
+}
+
+calcularReportes();
+
+</script>
+
+</body>
+</html>
